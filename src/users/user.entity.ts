@@ -1,22 +1,9 @@
-import { Entity, PrimaryGeneratedColumn, Column } from "typeorm";
-
-@Entity()
-export class User{
-    @PrimaryGeneratedColumn()
-    id!: number;
-
-    @Column({unique: true})
-    email!: string;
-
-    @Column({ unique: true })
-    username!: string;
-
-    @Column()
-    password!: string;
-
-    @Column({ nullable: true})
-    refreshToken!: string;
-
-    @Column({default: 'user'})
-    role!: string;
+// Mantido por compatibilidade. O modelo real está em prisma/schema.prisma
+export interface User {
+  id: number;
+  email: string;
+  username: string;
+  password: string;
+  refreshToken: string | null;
+  role: string;
 }

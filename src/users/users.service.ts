@@ -1,37 +1,42 @@
-import { Injectable } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-import { User } from './user.entity';
+import { ConflictException, Injectable } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
+import { PrismaService } from '../prisma/prisma.service';
 
 @Injectable()
 export class UsersService {
-  constructor(
-    @InjectRepository(User)
-    private readonly repository: Repository<User>,
-  ) {}
+  constructor(private readonly prisma: PrismaService) {}
 
   async create(username: string, email: string, password: string) {
-    const user = this.repository.create({ username, email, password });
-    return this.repository.save(user);
+    try {
+      return await this.prisma.user.create({ data: { username, email, password } });
+    } catch (error) {
+      if (
+        error instanceof Prisma.PrismaClientKnownRequestError &&
+        error.code === 'P2002'
+      ) {
+        throw new ConflictException('Email já está em uso');
+      }
+      throw error;
+    }
   }
 
   async findAll() {
-    return this.repository.find();
+    return this.prisma.user.findMany();
   }
 
   async findByUsername(username: string) {
-    return this.repository.findOne({ where: { username } });
+    return this.prisma.user.findUnique({ where: { username } });
   }
 
   async findById(id: number) {
-    return this.repository.findOne({ where: { id } });
+    return this.prisma.user.findUnique({ where: { id } });
   }
 
   async findByEmail(email: string) {
-    return this.repository.findOne({ where: { email } });
+    return this.prisma.user.findUnique({ where: { email } });
   }
 
   async updateRefreshToken(id: number, hashedToken: string | null) {
-    await this.repository.update(id, { refreshToken: hashedToken });
+    await this.prisma.user.update({ where: { id }, data: { refreshToken: hashedToken } });
   }
 }

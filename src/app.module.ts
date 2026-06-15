@@ -1,19 +1,19 @@
 import { Module } from '@nestjs/common';
-import { TypeOrmModule } from '@nestjs/typeorm';
+import { ConfigModule } from '@nestjs/config';
+import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
+import { APP_GUARD } from '@nestjs/core';
 import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
-import { User } from './users/user.entity';
+import { PrismaModule } from './prisma/prisma.module';
 
 @Module({
   imports: [
-    TypeOrmModule.forRoot({
-      type: 'better-sqlite3',
-      database: 'db.sqlite',
-      entities: [User],
-      synchronize: true,
-    }),
+    ConfigModule.forRoot({ isGlobal: true }),
+    ThrottlerModule.forRoot({ throttlers: [{ ttl: 60000, limit: 5 }] }),
+    PrismaModule,
     AuthModule,
     UsersModule,
   ],
+  providers: [{ provide: APP_GUARD, useClass: ThrottlerGuard }],
 })
 export class AppModule {}
