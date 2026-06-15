@@ -1,42 +1,85 @@
-import { ConflictException, Injectable } from '@nestjs/common';
-import { Prisma } from '@prisma/client';
+import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 
 @Injectable()
 export class UsersService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async create(username: string, email: string, password: string) {
-    try {
-      return await this.prisma.user.create({ data: { username, email, password } });
-    } catch (error) {
-      if (
-        error instanceof Prisma.PrismaClientKnownRequestError &&
-        error.code === 'P2002'
-      ) {
-        throw new ConflictException('Email já está em uso');
-      }
-      throw error;
-    }
-  }
-
-  async findAll() {
-    return this.prisma.user.findMany();
+  create(data: {
+    username: string;
+    email: string;
+    password: string;
+  }) {
+    return this.prisma.user.create({
+      data,
+    });
   }
 
   async findByUsername(username: string) {
     return this.prisma.user.findUnique({ where: { username } });
   }
 
-  async findById(id: number) {
-    return this.prisma.user.findUnique({ where: { id } });
+  findById(id: string) {
+    return this.prisma.user.findUnique({
+      where: { id },
+    });
   }
 
-  async findByEmail(email: string) {
-    return this.prisma.user.findUnique({ where: { email } });
+  findByEmail(email: string) {
+    return this.prisma.user.findUnique({
+      where: { email },
+    });
   }
 
-  async updateRefreshToken(id: number, hashedToken: string | null) {
-    await this.prisma.user.update({ where: { id }, data: { refreshToken: hashedToken } });
+  updateRefreshToken(userId: string, token: string | null) {
+    return this.prisma.user.update({
+      where: { id: userId },
+      data: {
+        refreshToken: token,
+      },
+    });
+  }
+
+  // READ ALL
+  findAll() {
+    return this.prisma.user.findMany({
+      select: {
+        id: true,
+        email: true,
+        username: true,
+        role: true,
+        bio: true,
+        avatar: true,
+        pronoun: true,
+        studyTime: true,
+      },
+    });
+  }
+
+  // UPDATE
+  update(id: string, data: any) {
+    return this.prisma.user.update({
+      where: { id },
+      data,
+    });
+  }
+
+  // DELETE
+  remove(id: string) {
+    return this.prisma.user.delete({
+      where: { id },
+    });
+  }
+
+  // Pomodoro
+  async addStudyTime(id: string, minutes: number) {
+    return this.prisma.user.update({
+      where: { id },
+      data: {
+        studyTime: {
+          increment: minutes,
+        },
+      },
+    });
   }
 }

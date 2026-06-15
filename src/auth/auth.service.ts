@@ -1,8 +1,8 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { UsersService } from '../users/users.service';
 import { JwtService } from '@nestjs/jwt';
-import { jwtConstants } from './constants';
 import * as bcrypt from 'bcrypt';
+import { jwtConstants } from './constants';
 
 @Injectable()
 export class AuthService {
@@ -11,42 +11,84 @@ export class AuthService {
     private readonly jwtService: JwtService,
   ) {}
 
+  // REGISTER
   async register(username: string, email: string, password: string) {
-    const hashed = await bcrypt.hash(password, 10);
-    return this.usersService.create(username, email, hashed);
+    const existingUser = await this.usersService.findByEmail(email);
+    if (existingUser) {
+      throw new UnauthorizedException('User already exists');
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    return this.usersService.create({
+      username,
+      email,
+      password: hashedPassword,
+    });
   }
 
-  private async generateTokens(userId: number, username: string, role: string) {
-    const payload = { username, sub: userId, role };
-    const [access_token, refresh_token] = await Promise.all([
-      this.jwtService.signAsync(payload),
-      this.jwtService.signAsync(payload, {
-        secret: jwtConstants.refreshSecret,
-        expiresIn: '7d',
-      }),
-    ]);
-    const hashed = await bcrypt.hash(refresh_token, 10);
-    await this.usersService.updateRefreshToken(userId, hashed);
-    return { access_token, refresh_token };
-  }
-
+  // LOGIN
   async signIn(email: string, password: string) {
     const user = await this.usersService.findByEmail(email);
-    if (!user || !(await bcrypt.compare(password, user.password))) {
-      throw new UnauthorizedException('Credenciais inválidas');
+
+    if (!user) {
+      throw new UnauthorizedException('Invalid credentials');
     }
-    return this.generateTokens(user.id, user.username, user.role);
+
+    const passwordMatch = await bcrypt.compare(password, user.password);
+
+    if (!passwordMatch) {
+      throw new UnauthorizedException('Invalid credentials');
+    }
+
+    return this.generateTokens(user.id, user.username);
   }
 
-  async refresh(userId: number, refreshToken: string) {
+  // TOKENS
+  private async generateTokens(userId: string, username: string) {
+    const payload = {
+      sub: userId,
+      username,
+    };
+
+    const access_token = await this.jwtService.signAsync(payload, {
+      expiresIn: '15m',
+    });
+
+    const refresh_token = await this.jwtService.signAsync(payload, {
+      secret: jwtConstants.refreshSecret,
+      expiresIn: '7d',
+    });
+
+    const hashedRefresh = await bcrypt.hash(refresh_token, 10);
+
+    await this.usersService.updateRefreshToken(userId, hashedRefresh);
+
+    return {
+      access_token,
+      refresh_token,
+    };
+  }
+
+  // REFRESH
+  async refresh(userId: string, refreshToken: string) {
     const user = await this.usersService.findById(userId);
-    if (!user?.refreshToken || !(await bcrypt.compare(refreshToken, user.refreshToken))) {
+
+    if (!user?.refreshToken) {
       throw new UnauthorizedException();
     }
-    return this.generateTokens(user.id, user.username, user.role);
+
+    const valid = await bcrypt.compare(refreshToken, user.refreshToken);
+
+    if (!valid) {
+      throw new UnauthorizedException();
+    }
+
+    return this.generateTokens(user.id, user.username);
   }
 
-  async logout(userId: number) {
-    await this.usersService.updateRefreshToken(userId, null);
+  // LOGOUT
+  async logout(userId: string) {
+    return this.usersService.updateRefreshToken(userId, null);
   }
 }

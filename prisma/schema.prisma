@@ -4,13 +4,25 @@ generator client {
 
 datasource db {
   provider = "postgresql"
+  url      = env("DATABASE_URL")
 }
 
 model User {
-  id           Int     @id @default(autoincrement())
+  id           String     @id @default(cuid())
+
   email        String  @unique
   username     String  @unique
   password     String
+
+  bio          String?
+  avatar       String?
+  pronoun      String?
+
+  studyTime    Int     @default(0)
+
   refreshToken String?
   role         String  @default("user")
+
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 }
