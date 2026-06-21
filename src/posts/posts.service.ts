@@ -1,121 +1,40 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { Prisma } from '@prisma/client';
+import { CreatePostDto } from './dto/create-post.dto';
+import { UpdatePostDto } from './dto/update-post.dto';
 
 @Injectable()
 export class PostsService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private prisma: PrismaService) {}
 
-  create(data: {
-    content: string;
-    authorId: string;
-  }) {
-    return this.prisma.post.create({
-      data,
-      include: {
-        author: {
-            select: {
-            id: true,
-            email: true,
-            username: true,
-            bio: true,
-            avatar: true,
-            pronoun: true,
-            studyTime: true,
-            role: true,
-            createdAt: true,
-            updatedAt: true,
-            },
-        },
-      }
-    });
+  create(data: CreatePostDto) {
+    return this.prisma.post.create({ data });
   }
 
   findAll() {
     return this.prisma.post.findMany({
-      include: {
-        author: {
-            select: {
-                id: true,
-                email: true,
-                username: true,
-                bio: true,
-                avatar: true,
-                pronoun: true,
-                studyTime: true,
-                role: true,
-                createdAt: true,
-                updatedAt: true,
-            },
-        },
-      },
-      orderBy: {
-        createdAt: 'desc',
-      },
+      include: { author: true },
     });
   }
 
-  findByUser(userId: string) {
-    return this.prisma.post.findMany({
-      where: {
-        authorId: userId,
-      },
-      include: {
-        author: {
-            select: {
-                id: true,
-                email: true,
-                username: true,
-                bio: true,
-                avatar: true,
-                pronoun: true,
-                studyTime: true,
-                role: true,
-                createdAt: true,
-                updatedAt: true,
-            },
-        },
-      },
-      orderBy: {
-        createdAt: 'desc',
-      },
-    });
-  }
-
-  findById(id: string) {
+  findOne(id: string) {
     return this.prisma.post.findUnique({
-        where: { id },
-        include: {
-        author: {
-            select: {
-                id: true,
-                email: true,
-                username: true,
-                bio: true,
-                avatar: true,
-                pronoun: true,
-                studyTime: true,
-                role: true,
-                createdAt: true,
-                updatedAt: true,
-            },
-        },
-        },
+      where: { id },
+      include: { author: true },
     });
-    }
+  }
 
-    async update(id: string, data: { content?: string; title?: string }) {
+  update(id: string, data: UpdatePostDto) {
     return this.prisma.post.update({
-        where: { id },
-        data: {
-        ...(data.content !== undefined && { content: data.content }),
-        ...(data.title !== undefined && { title: data.title }),
-        },
+      where: { id },
+      data,
     });
-    }
+  }
 
-    remove(id: string) {
+  remove(id: string) {
     return this.prisma.post.delete({
-        where: { id },
+      where: { id },
     });
-    }
+  }
 }

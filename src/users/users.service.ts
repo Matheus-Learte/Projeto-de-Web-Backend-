@@ -6,6 +6,7 @@ export class UsersService {
   constructor(private readonly prisma: PrismaService) {}
 
   create(data: {
+    name: string;
     username: string;
     email: string;
     password: string;
@@ -22,6 +23,20 @@ export class UsersService {
   findById(id: string) {
     return this.prisma.user.findUnique({
       where: { id },
+      select: {
+        id: true,
+        email: true,
+        username: true,
+        name:true,
+        bio: true,
+        avatar: true,
+        pronoun: true,
+        studyTime: true,
+        role: true,
+        refreshToken: true,
+        createdAt: true,
+        updatedAt: true,
+      },
     });
   }
 
