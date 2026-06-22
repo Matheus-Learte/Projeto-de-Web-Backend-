@@ -87,12 +87,12 @@ export class UsersService {
   }
 
   // Pomodoro
-  async addStudyTime(id: string, minutes: number) {
+  async addStudyTime(id: string, hours: number) {
     return this.prisma.user.update({
       where: { id },
       data: {
         studyTime: {
-          increment: minutes,
+          increment: hours,
         },
       },
     });

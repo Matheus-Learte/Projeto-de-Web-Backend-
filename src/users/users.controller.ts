@@ -39,7 +39,10 @@ export class UsersController {
   // PATCH /users/:id/study-time
   @UseGuards(AuthGuard)
   @Patch(':id/study-time')
-  addStudyTime(@Param('id') id: string, @Body('minutes') minutes: number) {
-    return this.usersService.addStudyTime(id, minutes);
+  addStudyTime(
+    @Param('id') id: string,
+    @Body('hours') hours: number,
+  ) {
+    return this.usersService.addStudyTime(id, hours);
   }
 }
