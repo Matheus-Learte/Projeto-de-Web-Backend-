@@ -25,6 +25,13 @@ export class PostsService {
     });
   }
 
+  findByUser(userId: string) {
+    return this.prisma.post.findMany({
+      where: { authorId: userId },
+      include: { author: true },
+    });
+  }
+
   update(id: string, data: UpdatePostDto) {
     return this.prisma.post.update({
       where: { id },
@@ -35,6 +42,12 @@ export class PostsService {
   remove(id: string) {
     return this.prisma.post.delete({
       where: { id },
+    });
+  }
+
+  removeByUser(userId: string) {
+    return this.prisma.post.deleteMany({
+      where: { authorId: userId },
     });
   }
 }

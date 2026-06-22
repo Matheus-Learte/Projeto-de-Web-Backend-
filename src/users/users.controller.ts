@@ -3,7 +3,6 @@ import { UsersService } from './users.service';
 import { AuthGuard } from '../auth/auth.guard';
 import { CreateUserDto } from './dto/create-user.dto';
 
-@UseGuards(AuthGuard)
 @Controller('users')
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
@@ -24,18 +23,21 @@ export class UsersController {
     return this.usersService.create(body);
   }
 
+  @UseGuards(AuthGuard)
   @Put(':id')
   update(@Param('id') id: string, @Body() data: CreateUserDto) {
     return this.usersService.update(id, data);
   }
 
   // DELETE /users/:id
+  @UseGuards(AuthGuard)
   @Delete(':id')
   delete(@Param('id') id: string) {
     return this.usersService.remove(id);
   }
 
   // PATCH /users/:id/study-time
+  @UseGuards(AuthGuard)
   @Patch(':id/study-time')
   addStudyTime(@Param('id') id: string, @Body('minutes') minutes: number) {
     return this.usersService.addStudyTime(id, minutes);
