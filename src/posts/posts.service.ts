@@ -15,6 +15,9 @@ export class PostsService {
   findAll() {
     return this.prisma.post.findMany({
       include: { author: true },
+      orderBy: {
+        createdAt: 'desc',
+      },
     });
   }
 
@@ -29,6 +32,9 @@ export class PostsService {
     return this.prisma.post.findMany({
       where: { authorId: userId },
       include: { author: true },
+      orderBy: {
+        createdAt: 'desc',
+      },
     });
   }
 
