@@ -1,7 +1,8 @@
-import { Controller, Get, Post, Body, Param, UseGuards, Patch, Put, Delete, Query } from '@nestjs/common';
+import { Controller, Request, Get, Post, Body, Param, UseGuards, Patch, Put, Delete, Query, UnauthorizedException } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { AuthGuard } from '../auth/auth.guard';
 import { CreateUserDto } from './dto/create-user.dto';
+import { UpdateUserDto } from './dto/update-user.dto';
 
 @Controller('users')
 export class UsersController {
@@ -46,14 +47,26 @@ export class UsersController {
 
   @UseGuards(AuthGuard)
   @Put(':id')
-  update(@Param('id') id: string, @Body() data: CreateUserDto) {
+  update(
+    @Param('id') id: string,
+    @Body() data: any,
+    @Request() req,
+  ) {
+    if (req.user.sub !== id) {
+      throw new UnauthorizedException();
+    }
+
     return this.usersService.update(id, data);
   }
 
   // DELETE /users/:id
   @UseGuards(AuthGuard)
   @Delete(':id')
-  delete(@Param('id') id: string) {
+  delete(@Param('id') id: string, @Request() req) {
+    if (req.user.sub !== id) {
+      throw new UnauthorizedException();
+    }
+
     return this.usersService.remove(id);
   }
 

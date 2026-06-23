@@ -1,11 +1,23 @@
-import { Controller, Post, Get, Body, Request, UseGuards } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Get,
+  Body,
+  Request,
+  UseGuards,
+} from '@nestjs/common';
+
 import { AuthService } from './auth.service';
+import { UsersService } from '../users/users.service';
 import { AuthGuard } from './auth.guard';
 import { RefreshGuard } from './refresh.guard';
 
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly authService: AuthService) {}
+  constructor(
+    private readonly authService: AuthService,
+    private readonly usersService: UsersService,
+  ) {}
 
   @Post('register')
   async register(@Body() body: { name: string, username: string; email: string; password: string }) {
@@ -32,6 +44,6 @@ export class AuthController {
   @UseGuards(AuthGuard)
   @Get('profile')
   getProfile(@Request() req) {
-    return req.user;
+    return this.usersService.findById(req.user.sub);
   }
 }
