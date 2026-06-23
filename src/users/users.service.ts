@@ -36,6 +36,8 @@ export class UsersService {
         refreshToken: true,
         createdAt: true,
         updatedAt: true,
+        followers: true,
+        following: true,
       },
     });
   }
@@ -96,6 +98,50 @@ export class UsersService {
         avatar: true,
       },
     });
+  }
+
+  async toggleFollow(followerId: string, followingId: string) {
+
+    const existing = await this.prisma.follow.findUnique({
+      where: {
+        followerId_followingId: {
+          followerId,
+          followingId,
+        },
+      },
+    });
+
+    // UNFOLLOW
+    if (existing) {
+      await this.prisma.follow.delete({
+        where: { id: existing.id },
+      });
+
+      return { following: false };
+    }
+
+    // FOLLOW
+    await this.prisma.follow.create({
+      data: {
+        followerId,
+        followingId,
+      },
+    });
+
+    return { following: true };
+  }
+
+  async getFollowStatus(followerId: string, followingId: string) {
+    const follow = await this.prisma.follow.findUnique({
+      where: {
+        followerId_followingId: {
+          followerId,
+          followingId,
+        },
+      },
+    });
+
+    return { following: !!follow };
   }
 
   // UPDATE

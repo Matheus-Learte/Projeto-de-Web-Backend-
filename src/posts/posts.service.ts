@@ -15,12 +15,12 @@ export class PostsService {
     const posts = await this.prisma.post.findMany({
       include: {
         author: true,
-        postLikes: true,
         _count: {
           select: {
             comments: true,
           },
         },
+        postLikes: true, // só aqui pra cálculo interno
       },
       orderBy: {
         createdAt: 'desc',
@@ -28,9 +28,20 @@ export class PostsService {
     });
 
     return posts.map((post) => ({
-      ...post,
+      id: post.id,
+      title: post.title,
+      content: post.content,
+      image: post.image,
+      createdAt: post.createdAt,
+      likes: post.likes,
+      author: post.author,
+      authorId: post.authorId,
+      communityId: (post as any).communityId,
+
+      _count: post._count,
+
       likedByMe: userId
-        ? post.postLikes.some((like) => like.userId === userId)
+        ? post.postLikes.some((l) => l.userId === userId)
         : false,
     }));
   }
@@ -54,7 +65,7 @@ export class PostsService {
     return {
       ...post,
       likedByMe: userId
-        ? post.postLikes.some((like) => like.userId === userId)
+        ? post.postLikes.some((l) => l.userId === userId)
         : false,
     };
   }
@@ -69,7 +80,6 @@ export class PostsService {
             comments: true,
           },
         },
-        postLikes: true,
       },
       orderBy: {
         createdAt: 'desc',

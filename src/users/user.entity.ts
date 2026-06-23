@@ -1,6 +1,6 @@
 // Mantido por compatibilidade. O modelo real está em prisma/schema.prisma
 export interface User {
-  id: number;
+  id: string;
   email: string;
   username: string;
   password: string;
