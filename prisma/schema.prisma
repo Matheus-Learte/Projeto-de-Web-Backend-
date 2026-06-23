@@ -59,7 +59,7 @@ model Post {
 
   likes     Int      @default(0)
 
-  postLikes PostLike[]   // ✅ RELAÇÃO CORRETA
+  postLikes PostLike[] 
 }
 
 model Comment {
@@ -71,7 +71,7 @@ model Comment {
   postId    String
   parentId  String?
 
-  author    User @relation(fields: [authorId], references: [id])
+  author User @relation(fields: [authorId], references: [id], onDelete: Cascade)
   post      Post @relation(fields: [postId], references: [id])
 
   parent    Comment?  @relation("CommentReplies", fields: [parentId], references: [id])
@@ -79,7 +79,7 @@ model Comment {
 
   likes     Int @default(0)
 
-  commentLikes CommentLike[]   // ✅ RELAÇÃO CORRETA
+  commentLikes CommentLike[]   
 }
 
 model PostLike {
@@ -87,7 +87,7 @@ model PostLike {
   userId String
   postId String
 
-  user User @relation(fields: [userId], references: [id])
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
   post Post @relation(fields: [postId], references: [id])
 
   @@unique([userId, postId])
@@ -98,7 +98,7 @@ model CommentLike {
   userId    String
   commentId String
 
-  user    User    @relation(fields: [userId], references: [id])
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
   comment Comment @relation(fields: [commentId], references: [id])
 
   @@unique([userId, commentId])
