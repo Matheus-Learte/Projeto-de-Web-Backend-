@@ -1,4 +1,13 @@
-import { Controller, Get, Post, Body, Param, Patch, Delete } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Param,
+  Patch,
+  Delete,
+  Query,
+} from '@nestjs/common';
 import { PostsService } from './posts.service';
 import { CreatePostDto } from './dto/create-post.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
@@ -12,14 +21,18 @@ export class PostsController {
     return this.postsService.create(dto);
   }
 
+  // 👇 agora recebe userId opcional
   @Get()
-  findAll() {
-    return this.postsService.findAll();
+  findAll(@Query('userId') userId?: string) {
+    return this.postsService.findAll(userId);
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.postsService.findOne(id);
+  findOne(
+    @Param('id') id: string,
+    @Query('userId') userId?: string,
+  ) {
+    return this.postsService.findOne(id, userId);
   }
 
   @Get('user/:id')
@@ -32,6 +45,14 @@ export class PostsController {
     return this.postsService.update(id, dto);
   }
 
+  @Patch(':id/like')
+  toggleLike(
+    @Param('id') id: string,
+    @Body() body: { userId: string },
+  ) {
+    return this.postsService.toggleLike(id, body.userId);
+  }
+
   @Delete(':id')
   remove(@Param('id') id: string) {
     return this.postsService.remove(id);
@@ -40,5 +61,5 @@ export class PostsController {
   @Delete('user/:id')
   removeByUser(@Param('id') id: string) {
     return this.postsService.removeByUser(id);
-}
+  }
 }

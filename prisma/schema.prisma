@@ -21,7 +21,12 @@ model User {
   pronoun      String?
   studyTime    Float    @default(0)
   updatedAt    DateTime @updatedAt
+
   posts        Post[]
+  comments     Comment[]
+
+  postLikes    PostLike[]
+  commentLikes CommentLike[]
 }
 
 model Post {
@@ -34,4 +39,52 @@ model Post {
 
   authorId  String
   author    User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
+
+  comments  Comment[]
+
+  likes     Int      @default(0)
+
+  postLikes PostLike[]   // ✅ RELAÇÃO CORRETA
+}
+
+model Comment {
+  id        String   @id @default(cuid())
+  content   String
+  createdAt DateTime @default(now())
+
+  authorId  String
+  postId    String
+  parentId  String?
+
+  author    User @relation(fields: [authorId], references: [id])
+  post      Post @relation(fields: [postId], references: [id])
+
+  parent    Comment?  @relation("CommentReplies", fields: [parentId], references: [id])
+  replies   Comment[] @relation("CommentReplies")
+
+  likes     Int @default(0)
+
+  commentLikes CommentLike[]   // ✅ RELAÇÃO CORRETA
+}
+
+model PostLike {
+  id     String @id @default(cuid())
+  userId String
+  postId String
+
+  user User @relation(fields: [userId], references: [id])
+  post Post @relation(fields: [postId], references: [id])
+
+  @@unique([userId, postId])
+}
+
+model CommentLike {
+  id        String @id @default(cuid())
+  userId    String
+  commentId String
+
+  user    User    @relation(fields: [userId], references: [id])
+  comment Comment @relation(fields: [commentId], references: [id])
+
+  @@unique([userId, commentId])
 }

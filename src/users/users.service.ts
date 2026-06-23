@@ -71,6 +71,33 @@ export class UsersService {
     });
   }
 
+  async searchUsers(query: string) {
+    return this.prisma.user.findMany({
+      where: {
+        OR: [
+          {
+            name: {
+              contains: query,
+              mode: 'insensitive',
+            },
+          },
+          {
+            username: {
+              contains: query,
+              mode: 'insensitive',
+            },
+          },
+        ],
+      },
+      select: {
+        id: true,
+        name: true,
+        username: true,
+        avatar: true,
+      },
+    });
+  }
+
   // UPDATE
   update(id: string, data: any) {
     return this.prisma.user.update({

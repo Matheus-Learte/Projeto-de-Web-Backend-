@@ -1,6 +1,5 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { Prisma } from '@prisma/client';
 import { CreatePostDto } from './dto/create-post.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
 
@@ -12,30 +11,109 @@ export class PostsService {
     return this.prisma.post.create({ data });
   }
 
-  findAll() {
-    return this.prisma.post.findMany({
-      include: { author: true },
+  async findAll(userId?: string) {
+    const posts = await this.prisma.post.findMany({
+      include: {
+        author: true,
+        postLikes: true,
+        _count: {
+          select: {
+            comments: true,
+          },
+        },
+      },
       orderBy: {
         createdAt: 'desc',
       },
     });
+
+    return posts.map((post) => ({
+      ...post,
+      likedByMe: userId
+        ? post.postLikes.some((like) => like.userId === userId)
+        : false,
+    }));
   }
 
-  findOne(id: string) {
-    return this.prisma.post.findUnique({
+  async findOne(id: string, userId?: string) {
+    const post = await this.prisma.post.findUnique({
       where: { id },
-      include: { author: true },
+      include: {
+        author: true,
+        _count: {
+          select: {
+            comments: true,
+          },
+        },
+        postLikes: true,
+      },
     });
+
+    if (!post) return null;
+
+    return {
+      ...post,
+      likedByMe: userId
+        ? post.postLikes.some((like) => like.userId === userId)
+        : false,
+    };
   }
 
   findByUser(userId: string) {
     return this.prisma.post.findMany({
       where: { authorId: userId },
-      include: { author: true },
+      include: {
+        author: true,
+        _count: {
+          select: {
+            comments: true,
+          },
+        },
+        postLikes: true,
+      },
       orderBy: {
         createdAt: 'desc',
       },
     });
+  }
+
+  async toggleLike(postId: string, userId: string) {
+    const existing = await this.prisma.postLike.findUnique({
+      where: {
+        userId_postId: {
+          userId,
+          postId,
+        },
+      },
+    });
+
+    if (existing) {
+      await this.prisma.postLike.delete({
+        where: { id: existing.id },
+      });
+
+      await this.prisma.post.update({
+        where: { id: postId },
+        data: {
+          likes: { decrement: 1 },
+        },
+      });
+
+      return { liked: false };
+    }
+
+    await this.prisma.postLike.create({
+      data: { userId, postId },
+    });
+
+    await this.prisma.post.update({
+      where: { id: postId },
+      data: {
+        likes: { increment: 1 },
+      },
+    });
+
+    return { liked: true };
   }
 
   update(id: string, data: UpdatePostDto) {
