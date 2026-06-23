@@ -23,6 +23,22 @@ export class UsersController {
     return this.usersService.findById(id);
   }
 
+  @Patch(':id/follow')
+  toggleFollow(
+    @Param('id') id: string,
+    @Body() body: { followerId: string },
+  ) {
+    return this.usersService.toggleFollow(body.followerId, id);
+  }
+
+  @Get(':id/follow-status')
+  followStatus(
+    @Param('id') id: string,
+    @Query('userId') userId: string,
+  ) {
+    return this.usersService.getFollowStatus(userId, id);
+  }
+
   @Post()
   create(@Body() body: CreateUserDto) {
     return this.usersService.create(body);
