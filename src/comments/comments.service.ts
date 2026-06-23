@@ -94,9 +94,12 @@ export class CommentsService {
     }; 
   }
 
-  remove(id: string) {
+  
+  async remove(id: string) {
     return this.prisma.comment.delete({
-      where: { id },
+      where: {
+        id,
+      },
     });
   }
 }
