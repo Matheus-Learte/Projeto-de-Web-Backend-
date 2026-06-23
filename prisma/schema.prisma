@@ -22,8 +22,10 @@ model User {
   studyTime    Float    @default(0)
   updatedAt    DateTime @updatedAt
 
-  posts        Post[]
-  comments     Comment[]
+  checklist ChecklistItem[]
+
+  posts    Post[]
+  comments Comment[]
 
   postLikes    PostLike[]
   commentLikes CommentLike[]
@@ -32,14 +34,25 @@ model User {
   followers Follow[] @relation("FollowingRelation")
 }
 
+model ChecklistItem {
+  id      String  @id @default(cuid())
+  content String
+  done    Boolean @default(false)
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+}
+
 model Follow {
-  id          String @id @default(cuid())
+  id String @id @default(cuid())
 
   followerId  String
   followingId String
 
-  follower    User @relation("FollowerRelation", fields: [followerId], references: [id], onDelete: Cascade)
-  following   User @relation("FollowingRelation", fields: [followingId], references: [id], onDelete: Cascade)
+  follower  User @relation("FollowerRelation", fields: [followerId], references: [id], onDelete: Cascade)
+  following User @relation("FollowingRelation", fields: [followingId], references: [id], onDelete: Cascade)
 
   @@unique([followerId, followingId])
 }
@@ -52,14 +65,14 @@ model Post {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  authorId  String
-  author    User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  authorId String
+  author   User   @relation(fields: [authorId], references: [id], onDelete: Cascade)
 
-  comments  Comment[]
+  comments Comment[]
 
-  likes     Int      @default(0)
+  likes Int @default(0)
 
-  postLikes PostLike[] 
+  postLikes PostLike[]
 }
 
 model Comment {
@@ -67,19 +80,19 @@ model Comment {
   content   String
   createdAt DateTime @default(now())
 
-  authorId  String
-  postId    String
-  parentId  String?
+  authorId String
+  postId   String
+  parentId String?
 
   author User @relation(fields: [authorId], references: [id], onDelete: Cascade)
-  post      Post @relation(fields: [postId], references: [id], onDelete: Cascade)
+  post   Post @relation(fields: [postId], references: [id], onDelete: Cascade)
 
-  parent    Comment?  @relation("CommentReplies", fields: [parentId], references: [id], onDelete: Cascade)
-  replies   Comment[] @relation("CommentReplies")
+  parent  Comment?  @relation("CommentReplies", fields: [parentId], references: [id], onDelete: Cascade)
+  replies Comment[] @relation("CommentReplies")
 
-  likes     Int @default(0)
+  likes Int @default(0)
 
-  commentLikes CommentLike[]   
+  commentLikes CommentLike[]
 }
 
 model PostLike {
@@ -98,7 +111,7 @@ model CommentLike {
   userId    String
   commentId String
 
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
   comment Comment @relation(fields: [commentId], references: [id], onDelete: Cascade)
 
   @@unique([userId, commentId])
