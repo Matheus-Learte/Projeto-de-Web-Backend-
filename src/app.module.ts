@@ -12,6 +12,7 @@ import { NotificationsModule } from './notifications/notifications.module';
 import { CommunitiesModule } from './communities/communities.module';
 import { CommunityPostsModule } from './community-posts/community-posts.module';
 import { CommunityCommentsModule } from './community-comments/community-comments.module';
+import { MessagesModule } from './messages/messages.module';
 
 @Module({
   imports: [
@@ -27,6 +28,7 @@ import { CommunityCommentsModule } from './community-comments/community-comments
     CommunitiesModule,
     CommunityPostsModule,
     CommunityCommentsModule,
+    MessagesModule,
   ],
   providers: [{ provide: APP_GUARD, useClass: ThrottlerGuard }],
 })

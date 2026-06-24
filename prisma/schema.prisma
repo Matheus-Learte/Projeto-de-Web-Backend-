@@ -40,6 +40,9 @@ model User {
   CommunityComment     CommunityComment[]
   CommunityPostLike    CommunityPostLike[]
   CommunityCommentLike CommunityCommentLike[]
+
+  sentMessages     Message[] @relation("SentMessages")
+  receivedMessages Message[] @relation("ReceivedMessages")
 }
 
 model ChecklistItem {
@@ -224,12 +227,29 @@ model CommunityCommentLike {
 model Notification {
   id String @id @default(cuid())
 
-  type    String // "LIKE", "COMMENT", "FOLLOW", "MESSAGE"
+  type    String // "LIKE", "COMMENT", "FOLLOW"
   message String
   read    Boolean @default(false)
 
   userId String
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+}
+
+model Message {
+  id String @id @default(cuid())
+
+  content String?
+  image   String?
+
+  senderId   String
+  receiverId String
+
+  sender   User @relation("SentMessages", fields: [senderId], references: [id], onDelete: Cascade)
+  receiver User @relation("ReceivedMessages", fields: [receiverId], references: [id], onDelete: Cascade)
+
+  read Boolean @default(false)
 
   createdAt DateTime @default(now())
 }
