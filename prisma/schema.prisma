@@ -22,7 +22,9 @@ model User {
   studyTime    Float    @default(0)
   updatedAt    DateTime @updatedAt
 
-  checklist ChecklistItem[]
+  checklist          ChecklistItem[]
+  communities        CommunityMember[]
+  createdCommunities Community[]
 
   posts    Post[]
   comments Comment[]
@@ -33,7 +35,11 @@ model User {
   following Follow[] @relation("FollowerRelation")
   followers Follow[] @relation("FollowingRelation")
 
-  notifications Notification[]
+  notifications        Notification[]
+  CommunityPost        CommunityPost[]
+  CommunityComment     CommunityComment[]
+  CommunityPostLike    CommunityPostLike[]
+  CommunityCommentLike CommunityCommentLike[]
 }
 
 model ChecklistItem {
@@ -59,6 +65,39 @@ model Follow {
   @@unique([followerId, followingId])
 }
 
+model Community {
+  id          String  @id @default(cuid())
+  name        String
+  description String?
+  image       String?
+  wallpaper   String?
+
+  adminId String
+  admin   User   @relation(fields: [adminId], references: [id], onDelete: Cascade)
+
+  members CommunityMember[]
+  posts   CommunityPost[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model CommunityMember {
+  id String @id @default(cuid())
+
+  userId      String
+  communityId String
+
+  role String @default("member") // "admin", "member"
+
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  community Community @relation(fields: [communityId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@unique([userId, communityId])
+}
+
 model Post {
   id        String   @id @default(cuid())
   title     String
@@ -75,6 +114,27 @@ model Post {
   likes Int @default(0)
 
   postLikes PostLike[]
+}
+
+model CommunityPost {
+  id        String   @id @default(cuid())
+  title     String
+  content   String?
+  image     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  authorId String
+  author   User   @relation(fields: [authorId], references: [id], onDelete: Cascade)
+
+  communityId String
+  community   Community @relation(fields: [communityId], references: [id], onDelete: Cascade)
+
+  comments CommunityComment[]
+
+  likes Int @default(0)
+
+  postLikes CommunityPostLike[]
 }
 
 model Comment {
@@ -97,6 +157,26 @@ model Comment {
   commentLikes CommentLike[]
 }
 
+model CommunityComment {
+  id        String   @id @default(cuid())
+  content   String
+  createdAt DateTime @default(now())
+
+  authorId String
+  postId   String
+  parentId String?
+
+  author User          @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  post   CommunityPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  parent  CommunityComment?  @relation("CommunityCommentReplies", fields: [parentId], references: [id], onDelete: Cascade)
+  replies CommunityComment[] @relation("CommunityCommentReplies")
+
+  likes Int @default(0)
+
+  commentLikes CommunityCommentLike[]
+}
+
 model PostLike {
   id     String @id @default(cuid())
   userId String
@@ -104,6 +184,17 @@ model PostLike {
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
   post Post @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, postId])
+}
+
+model CommunityPostLike {
+  id     String @id @default(cuid())
+  userId String
+  postId String
+
+  user User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  post CommunityPost @relation(fields: [postId], references: [id], onDelete: Cascade)
 
   @@unique([userId, postId])
 }
@@ -119,10 +210,21 @@ model CommentLike {
   @@unique([userId, commentId])
 }
 
+model CommunityCommentLike {
+  id        String @id @default(cuid())
+  userId    String
+  commentId String
+
+  user    User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  comment CommunityComment @relation(fields: [commentId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, commentId])
+}
+
 model Notification {
   id String @id @default(cuid())
 
-  type    String // "LIKE", "COMMENT", "FOLLOW"
+  type    String // "LIKE", "COMMENT", "FOLLOW", "MESSAGE"
   message String
   read    Boolean @default(false)
 
