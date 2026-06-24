@@ -4,6 +4,7 @@ import {
   Post,
   Get,
   Param,
+  Patch,
   Delete
 } from '@nestjs/common';
 
@@ -28,6 +29,14 @@ export class CommunityPostsController {
     @Param('id') id: string,
   ) {
     return this.service.findByCommunity(id);
+  }
+
+  @Patch(':id/like')
+  toggleLike(
+    @Param('id') id: string,
+    @Body() body: { userId: string },
+  ) {
+    return this.service.toggleLike(id, body.userId);
   }
 
   @Delete(':id')

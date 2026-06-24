@@ -11,6 +11,7 @@ import { ChecklistModule } from './checklist/checklist.module';
 import { NotificationsModule } from './notifications/notifications.module';
 import { CommunitiesModule } from './communities/communities.module';
 import { CommunityPostsModule } from './community-posts/community-posts.module';
+import { CommunityCommentsModule } from './community-comments/community-comments.module';
 
 @Module({
   imports: [
@@ -25,6 +26,7 @@ import { CommunityPostsModule } from './community-posts/community-posts.module';
     NotificationsModule,
     CommunitiesModule,
     CommunityPostsModule,
+    CommunityCommentsModule,
   ],
   providers: [{ provide: APP_GUARD, useClass: ThrottlerGuard }],
 })

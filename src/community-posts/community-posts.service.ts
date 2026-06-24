@@ -90,4 +90,67 @@ export class CommunityPostsService {
             },
         });
     }
+
+    async toggleLike(postId: string, userId: string) {
+      const existing = await this.prisma.communityPostLike.findUnique({
+        where: {
+          userId_postId: {
+            userId,
+            postId,
+          },
+        },
+      });
+
+      if (existing) {
+        await this.prisma.communityPostLike.delete({
+          where: { id: existing.id },
+        });
+
+        await this.prisma.communityPost.update({
+          where: { id: postId },
+          data: {
+            likes: { decrement: 1 },
+          },
+        });
+
+        return { liked: false };
+      }
+
+      const post = await this.prisma.communityPost.findUnique({
+        where: { id: postId },
+        select: {
+          authorId: true,
+        },
+      });
+
+      if (!post) {
+        throw new Error('Post não encontrado');
+      }
+
+      await this.prisma.communityPostLike.create({
+        data: {
+          userId,
+          postId,
+        },
+      });
+
+      await this.prisma.communityPost.update({
+        where: { id: postId },
+        data: {
+          likes: { increment: 1 },
+        },
+      });
+
+      if (post.authorId !== userId) {
+        await this.prisma.notification.create({
+          data: {
+            userId: post.authorId,
+            type: 'LIKE',
+            message: 'Alguém curtiu seu post na comunidade',
+          },
+        });
+      }
+
+      return { liked: true };
+    }
 }
