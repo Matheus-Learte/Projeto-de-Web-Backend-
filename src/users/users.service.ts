@@ -36,8 +36,12 @@ export class UsersService {
         refreshToken: true,
         createdAt: true,
         updatedAt: true,
-        followers: true,
-        following: true,
+        _count: {
+          select: {
+            followers: true,
+            following: true,
+          },
+        },
       },
     });
   }
