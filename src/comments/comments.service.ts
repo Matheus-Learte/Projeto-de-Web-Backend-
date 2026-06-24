@@ -1,17 +1,25 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { NotificationsService } from '../notifications/notifications.service';
 
 @Injectable()
 export class CommentsService {
-  constructor(private prisma: PrismaService) {}
+  constructor(private prisma: PrismaService, private notificationsService: NotificationsService,) {}
 
-  create(data: {
+  async create(data: {
     content: string;
     authorId: string;
     postId: string;
     parentId?: string;
   }) {
-    return this.prisma.comment.create({
+    const post = await this.prisma.post.findUnique({
+      where: { id: data.postId },
+      select: {
+        authorId: true,
+      },
+    });
+
+    const comment = await this.prisma.comment.create({
       data,
       include: {
         author: true,
@@ -22,6 +30,16 @@ export class CommentsService {
         },
       },
     });
+
+    if (post && post.authorId !== data.authorId) {
+      await this.notificationsService.create(
+        post.authorId,
+        'COMMENT',
+        'Alguém comentou no seu post',
+      );
+    }
+
+    return comment;
   }
 
   findByPost(postId: string) {
@@ -94,7 +112,6 @@ export class CommentsService {
     }; 
   }
 
-  
   async remove(id: string) {
     return this.prisma.comment.delete({
       where: {

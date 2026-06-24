@@ -32,6 +32,8 @@ model User {
 
   following Follow[] @relation("FollowerRelation")
   followers Follow[] @relation("FollowingRelation")
+
+  notifications Notification[]
 }
 
 model ChecklistItem {
@@ -115,4 +117,17 @@ model CommentLike {
   comment Comment @relation(fields: [commentId], references: [id], onDelete: Cascade)
 
   @@unique([userId, commentId])
+}
+
+model Notification {
+  id String @id @default(cuid())
+
+  type    String // "LIKE", "COMMENT", "FOLLOW"
+  message String
+  read    Boolean @default(false)
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
 }

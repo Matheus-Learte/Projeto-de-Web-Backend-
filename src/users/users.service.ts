@@ -1,9 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { NotificationsService } from '../notifications/notifications.service';
 
 @Injectable()
 export class UsersService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly prisma: PrismaService, private readonly notificationsService: NotificationsService,) {}
 
   create(data: {
     name: string;
@@ -102,6 +103,10 @@ export class UsersService {
 
   async toggleFollow(followerId: string, followingId: string) {
 
+    if (followerId === followingId) {
+      return { following: false };
+    }
+
     const existing = await this.prisma.follow.findUnique({
       where: {
         followerId_followingId: {
@@ -127,6 +132,19 @@ export class UsersService {
         followingId,
       },
     });
+
+    // pegar username de quem seguiu
+    const follower = await this.prisma.user.findUnique({
+      where: { id: followerId },
+      select: { username: true },
+    });
+
+    // criar notificação
+    await this.notificationsService.create(
+      followingId,
+      'FOLLOW',
+      `${follower?.username ?? 'Alguém'} começou a te seguir`,
+    );
 
     return { following: true };
   }

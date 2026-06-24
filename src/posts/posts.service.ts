@@ -112,6 +112,17 @@ export class PostsService {
       return { liked: false };
     }
 
+    const post = await this.prisma.post.findUnique({
+      where: { id: postId },
+      select: {
+        authorId: true,
+      },
+    });
+
+    if (!post) {
+      throw new Error('Post não encontrado');
+    }
+
     await this.prisma.postLike.create({
       data: { userId, postId },
     });
@@ -122,6 +133,16 @@ export class PostsService {
         likes: { increment: 1 },
       },
     });
+
+    if (post.authorId !== userId) {
+      await this.prisma.notification.create({
+        data: {
+          userId: post.authorId,
+          type: 'LIKE',
+          message: 'Alguém curtiu seu post',
+        },
+      });
+    }
 
     return { liked: true };
   }
